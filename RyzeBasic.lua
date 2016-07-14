@@ -17,7 +17,7 @@ function OnLoad()
     Config.clearsettings:addParam("clearenable", "Enable Wave Clear", SCRIPT_PARAM_ONOFF, true)
     Config.clearsettings:addParam("clearQ", "(Q) Wave Clear", SCRIPT_PARAM_ONOFF, true)
     Config.clearsettings:addParam("clearE", "(E) Wave Clear", SCRIPT_PARAM_ONOFF, true)
-    targetSelector = TargetSelector(TARGET_LESS_CAST, 1000, DAMAGE_MAGIC, true)
+    targetSelector = TargetSelector(TARGET_LESS_CAST, 550, DAMAGE_MAGIC, true)
 
 
     UPL:AddToMenu(Config)
