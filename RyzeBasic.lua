@@ -188,11 +188,11 @@ end
 
 
 function CastW()
-	--CastSpell(_W, Target)
+	CastSpell(_W, Target)
 end
 
 function CastE()
-	--CastSpell(_E, Target)
+	CastSpell(_E, Target)
 end
 
 function OnUpdateBuff(Src, Buff, iStacks)
