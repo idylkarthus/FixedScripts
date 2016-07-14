@@ -6,7 +6,7 @@ local VP = VPrediction()
 damagecombo = true
 dontQ = false
 function OnLoad()
-    Config = scriptConfig("Ryze Basic", "basicryze")
+    Config = scriptConfig("Ryze Basic", "basicbasicryze")
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
     Config:addParam("clear", "Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
     Config:addSubMenu("Shield Combo Settings", "shieldsettings")
