@@ -5,7 +5,7 @@ local VP = VPrediction()
 function OnLoad()
     Config = scriptConfig("Cass E Farm Basic", "basicryze")
     Config:addParam("clear", "Last hit E Key One", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
-    Config:addParam("harras", "Last hit E Key two"", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
+    Config:addParam("harras", "Last hit E Key two", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
     Config:addSubMenu("E Settings", "clearsettings")
     Config.clearsettings:addParam("clearE", "Last hit with E (E)", SCRIPT_PARAM_ONOFF, true)
 end
