@@ -41,9 +41,7 @@ function OnTick()
 	if Config.harass then
 		Harass()
 	end
-	if myHero:CanUseSpell(_R) == READY then
-		RSteal()
-	end
+	RSteal()
 	smiteDmg = 20 + 8 * myHero.level
 	ignitedmg = 50 + 20*myHero.level
 	if smite == nil then
@@ -297,43 +295,42 @@ end
 
 
 function RSteal() 
-	if ultActive == false then
-		for i,enemy in pairs(GetEnemyHeroes()) do
-    			if not enemy.dead and enemy.visible then
-				if myHero:CanUseSpell(_Q) == READY then
-					if ValidTarget(enemy, 770) then
-						if enemy.health < GetQDamage(enemy) then
-							CastPositionQ, HitChance, HeroPosition = UPL:Predict(_Q, myHero, enemy)
-							if CastPositionQ and HitChance > 0 then 
-								CastSpell(_Q, CastPositionQ.x, CastPositionQ.z)
-							end
-						end
-					end
-				end
-				if myHero:CanUseSpell(_E) == READY then
-					if ValidTarget(enemy, 830) then
-						if enemy.health < GetEDamage(enemy) then
-							CastPositionE, HitChance, HeroPosition = UPL:Predict(_E, myHero, enemy)
-							if CastPositionE and HitChance > 0 then
-								CastSpell(_E, CastPositionE.x, CastPositionE.z)
-							end
-						end
-					end
-				end
-				if myHero:CanUseSpell(_R) == READY then
-					if ValidTarget(enemy, 650) then
-						if enemy.health < GetRDamage(enemy) then
-							CastSpell(_R, enemy)
-						end
-					elseif ValidTarget(enemy, 1350) then
-						if enemy.health < GetRDamage(enemy) and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY then
-							CalcAndCastKS(myHero, enemy, 760, 770)
+	for i,enemy in pairs(GetEnemyHeroes()) do
+    		if not enemy.dead and enemy.visible then
+			if myHero:CanUseSpell(_Q) == READY then
+				if ValidTarget(enemy, 770) then
+					if enemy.health < GetQDamage(enemy) then
+						CastPositionQ, HitChance, HeroPosition = UPL:Predict(_Q, myHero, enemy)
+						if CastPositionQ and HitChance > 0 then 
+							CastSpell(_Q, CastPositionQ.x, CastPositionQ.z)
 						end
 					end
 				end
 			end
+			if myHero:CanUseSpell(_E) == READY then
+				if ValidTarget(enemy, 830) then
+					if enemy.health < GetEDamage(enemy) then
+						CastPositionE, HitChance, HeroPosition = UPL:Predict(_E, myHero, enemy)
+						if CastPositionE and HitChance > 0 then
+							CastSpell(_E, CastPositionE.x, CastPositionE.z)
+						end
+					end
+				end
+			end
+			if myHero:CanUseSpell(_R) == READY and ultActive == false then
+				if ValidTarget(enemy, 650) then
+					if enemy.health < GetRDamage(enemy) then
+						CastSpell(_R, enemy)
+					end
+				elseif ValidTarget(enemy, 1350) then
+					if enemy.health < GetRDamage(enemy) and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY then
+						CalcAndCastKS(myHero, enemy, 760, 770)
+					end
+				end
+			end
 		end
-	elseif CountEnemyHeroInRange(650) == 0 then
+	end
+	if CountEnemyHeroInRange(650) == 0 and ultActive == true then
 		CastSpell(_R)
 	end
 end
