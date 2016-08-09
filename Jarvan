@@ -6,6 +6,7 @@ TITANIC = false
 TITANICSLOT = nil
 TIAMAT = false
 CanE = false
+smite == nil
 TIAMATSLOT = nil
 local VP = VPrediction()
 function OnLoad()
@@ -39,7 +40,35 @@ function OnTick()
 	if myHero:CanUseSpell(_R) == READY then
 		RSteal()
 	end
+	smiteDmg = 20 + 8 * myHero.level
+	if smite == nil then
+		smite = Slot("S5_SummonerSmitePlayerGanker")
+	else
+		ksSmite()
+	end
 end
+
+function ksSmite()
+    if smite then
+        for i, enemy in pairs(GetEnemyHeroes()) do
+            if ValidTarget(enemy, 500) then
+                if enemy.health < smiteDmg then
+                    CastSpell(smite, enemy)
+                end
+            end
+        end
+    end
+end
+
+
+function Slot(name)
+    if myHero:GetSpellData(SUMMONER_1).name == name then
+        return SUMMONER_1
+    elseif myHero:GetSpellData(SUMMONER_2).name == name then
+        return SUMMONER_2
+    end
+end
+
 
 function Flee()
 	if myHero:CanUseSpell(_E) == READY and GetDistance(mousePos) < 770 then
