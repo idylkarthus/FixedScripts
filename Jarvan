@@ -12,11 +12,14 @@ Middlespot = nil
 middlex = nil
 middlez = nil
 TIAMATSLOT = nil
+drawflag = nil
+flags = {}
 local VP = VPrediction()
+
 function OnLoad()
     Config = scriptConfig("Jarvan Dude", "JJ")
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
-    Config:addParam("manult", "Ult Target key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("R"))
+    Config:addParam("manult", "Ult Target", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("R"))
     Config:addParam("harass", "Harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
     Config:addParam("flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
     targetSelector = TargetSelector(TARGET_LESS_CAST, 900, DAMAGE_PHYSICAL, true)
@@ -57,6 +60,9 @@ function OnTick()
 		smite = Slot("SummonerDot")
 	else
 		ksIgnite()
+	end
+	if Target then
+
 	end
 end
 
@@ -102,7 +108,12 @@ function Flee()
 end
 
 function OnDraw()
-
+	for _, flag in pairs(flags) do
+		DrawCircle(flag.x, flag.y, flag.z, 100, ARGB(255,255,255,255))
+	end
+	if drawflag then
+		--DrawCircle(drawflag.x, drawflag.y, drawflag.z, 100, ARGB(255,255,255,255))
+	end
 end
 
 function FindSlotByName(name)
@@ -168,6 +179,14 @@ end
 
 function Combo()
 	if Target then
+		PredTarget = VP:GetCircularCastPosition(Target, 0.1, 400, 1000, math.huge, myHero, false)
+		for _, flag in pairs(flags) do
+			KnockUpPoint = VectorPointProjectionOnLine(myHero, flag, Target)
+			if GetDistance(PredTarget, KnockUpPoint) < 150 and GetDistance(flag) < 770 and myHero:CanUseSpell(_Q) == READY then
+				--print("casting placed flag Q")
+				CastSpell(_Q, flag.x, flag.z)
+			end
+		end
 		if myHero:CanUseSpell(_E) == READY then
 			CanE = true
 		end
@@ -347,6 +366,7 @@ end
 
 function OnCreateObj(obj)
 	if GetDistance(obj) < 1000 then
+		--PrintChat(obj.name)
 	end
 	if obj.name == "JarvanIVWall" then
 		ultActive = true
@@ -362,10 +382,38 @@ function OnCreateObj(obj)
 		middlex = nil
 		middlez = nil
 	end
+	if obj.name == "JarvanDemacianStandard_buf_green.troy" then
+		drawflag = obj
+	end
+	if obj.name == "JarvanDemacianStandard_buf_green.troy" then 
+		--print("Found Flag")
+		numflags = #flags+1
+		for x=1, numflags do
+			--print("looping")
+			if flags[x] == nil then
+				--print("Found empty space")
+				flags[x] = obj
+				break
+			end
+    		end
+	end
 end
 
-function OnDeleteteObj(obj)
 
+function OnDeleteObj(obj)
+	if GetDistance(obj) < 1000 then
+		--PrintChat(obj.name)
+	end
+	if obj.name == "JarvanDemacianStandard_buf_green.troy" then
+		--print("flag gone") 
+		for x, flag in pairs(flags) do
+			--print("Remove looping")
+			if obj.networkID == flag.networkID then
+				--print("Removing Flag")
+				flags[x] = nil
+			end
+    		end
+	end
 end
 
 function OnProcessSpell(unit, spell)
