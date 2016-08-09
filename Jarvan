@@ -16,6 +16,7 @@ local VP = VPrediction()
 function OnLoad()
     Config = scriptConfig("Jarvan Dude", "JJ")
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    Config:addParam("manult", "Ult Target", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("R"))
     Config:addParam("harass", "Harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
     Config:addParam("flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
     targetSelector = TargetSelector(TARGET_LESS_CAST, 900, DAMAGE_PHYSICAL, true)
@@ -40,6 +41,9 @@ function OnTick()
 	end
 	if Config.harass then
 		Harass()
+	end
+	if Config.manult and Target then
+		CastSpell(_R, Target)
 	end
 	RSteal()
 	smiteDmg = 20 + 8 * myHero.level
