@@ -6,7 +6,7 @@ TITANIC = false
 TITANICSLOT = nil
 TIAMAT = false
 CanE = false
-smite == nil
+smite = nil
 TIAMATSLOT = nil
 local VP = VPrediction()
 function OnLoad()
@@ -41,10 +41,16 @@ function OnTick()
 		RSteal()
 	end
 	smiteDmg = 20 + 8 * myHero.level
+	ignitedmg = 50 + 20*myHero.level
 	if smite == nil then
 		smite = Slot("S5_SummonerSmitePlayerGanker")
 	else
 		ksSmite()
+	end
+	if ignite == nil then
+		smite = Slot("SummonerDot")
+	else
+		ksIgnite()
 	end
 end
 
@@ -60,6 +66,18 @@ function ksSmite()
     end
 end
 
+
+function ksIgnite()
+    if ignite then
+        for i, enemy in pairs(GetEnemyHeroes()) do
+            if ValidTarget(enemy, 500) then
+                if enemy.health < igniteDmg then
+                    CastSpell(ignite, enemy)
+                end
+            end
+        end
+    end
+end
 
 function Slot(name)
     if myHero:GetSpellData(SUMMONER_1).name == name then
