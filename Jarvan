@@ -10,12 +10,12 @@ local VP = VPrediction()
 function OnLoad()
     Config = scriptConfig("Jarvan Dude", "JJ")
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
-    targetSelector = TargetSelector(TARGET_LESS_CAST, 550, DAMAGE_MAGIC, true)
+    targetSelector = TargetSelector(TARGET_LESS_CAST, 900, DAMAGE_PHYSICAL, true)
 
 
     UPL:AddToMenu(Config)
     UPL:AddSpell(_Q, { speed = 1400, delay = 0.25, range = 770, width = 70, collision = false, aoe = false, type = "linear" })
-    UPL:AddSpell(_E, { speed = math.huge, delay = 0.25, range = 830, width = 75, collision = false, aoe = true, type = "linear" })
+    UPL:AddSpell(_E, { speed = math.huge, delay = 0.75, range = 830, width = 75, collision = false, aoe = true, type = "linear" })
     UPL:AddSpell(_R, { speed = math.huge, delay = 0.25, range = 650, width = 325, collision = false, aoe = true, type = "linear" })
 end
 
@@ -26,6 +26,9 @@ function OnTick()
 	Target = targetSelector.target
 	if Config.shoot then
 		Combo()
+	end
+	if myHero:CanUseSpell(_R) == READY then
+		RSteal()
 	end
 end
 
@@ -103,9 +106,6 @@ function Combo()
 				CastE()
 			end
 		end
-		if myHero:CanUseSpell(_R) == READY then
-			RSteal()
-		end
 		if GetDistance(Target) < 440 then
 			CastTiamat()
 		end
@@ -177,7 +177,7 @@ function RSteal()
 			if myHero:CanUseSpell(_R) == READY then
 				if ValidTarget(enemy, 650) then
 					if enemy.health < GetRDamage(enemy) then
-						CastR(enemy)
+						CastSpell(_R, enemy)
 					end
 				end
 			end
