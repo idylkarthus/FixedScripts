@@ -1,0 +1,214 @@
+if myHero.charName ~= "JarvanIV" then return end
+require("UPL")
+UPL = UPL()
+require "VPrediction"
+TITANIC = false
+TITANICSLOT = nil
+TIAMAT = false
+TIAMATSLOT = nil
+local VP = VPrediction()
+function OnLoad()
+    Config = scriptConfig("Jarvan Dude", "JJ")
+    Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    targetSelector = TargetSelector(TARGET_LESS_CAST, 550, DAMAGE_MAGIC, true)
+
+
+    UPL:AddToMenu(Config)
+    UPL:AddSpell(_Q, { speed = 1400, delay = 0.25, range = 770, width = 70, collision = false, aoe = false, type = "linear" })
+    UPL:AddSpell(_E, { speed = math.huge, delay = 0.25, range = 830, width = 75, collision = false, aoe = true, type = "linear" })
+    UPL:AddSpell(_R, { speed = math.huge, delay = 0.25, range = 650, width = 325, collision = false, aoe = true, type = "linear" })
+end
+
+function OnTick()
+	GetTiamat()
+	GetTitanic()
+	targetSelector:update()
+	Target = targetSelector.target
+	if Config.shoot then
+		Combo()
+	end
+end
+
+function OnDraw()
+
+end
+
+function FindSlotByName(name)
+  	if name ~= nil then
+    	for i=0, 12 do
+      		if string.lower(myHero:GetSpellData(i).name) == string.lower(name) then
+        		return i
+      		end
+    	end
+  	end  
+  	return nil
+end
+
+function GetItem(name)
+  	local slot = FindSlotByName(name)
+  	return slot 
+end
+
+
+function CastTiamat()
+  	if TIAMAT then
+    	if (myHero:CanUseSpell(TIAMATSLOT) == READY) then
+     		CastSpell(TIAMATSLOT)
+    	end
+  	end
+end
+
+function CastTITANIC()
+  	if TITANIC then
+    	if (myHero:CanUseSpell(TITANICSLOT) == READY) then
+      		CastSpell(TITANICSLOT)
+    	end
+  	end
+end
+
+function GetTiamat()
+  	local slot = GetItem("ItemTiamatCleave")
+  	if (slot ~= nil) then
+    	TIAMAT = true
+    	TIAMATSLOT = slot
+  	else
+    	TIAMAT = false
+  	end
+end
+
+function GetTitanic()
+  	local slot = GetItem("ItemTitanicHydraCleave")
+  	if (slot ~= nil) then
+    	TITANIC = true
+    	TITANICSLOT = slot
+  	else
+    	TITANIC = false
+  	end
+end
+
+function Combo()
+	if Target then
+		if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 and myHero:CanUseSpell(_E) ~= READY  then
+			CastQ()
+		end
+		if myHero:CanUseSpell(_W) == READY and GetDistance(Target) < 600 then
+			CastW()
+		end
+		if myHero:CanUseSpell(_Q) ~= READY then
+			if myHero:CanUseSpell(_E) == READY and GetDistance(Target) < 830 then
+				CastE()
+			end
+		else
+			if myHero:CanUseSpell(_E) == READY and GetDistance(Target) < 770 then
+				CastE()
+			end
+		end
+		if myHero:CanUseSpell(_R) == READY then
+			RSteal()
+		end
+		if GetDistance(Target) < 440 then
+			CastTiamat()
+		end
+		if GetDistance(Target) < 440 then
+			CastTITANIC()
+		end	
+	end
+end
+
+
+function GetRDamage(unit)
+	local Rlvl = myHero:GetSpellData(_R).level
+	if Rlvl < 1 then return 0 end
+	local RDmg = {200, 325, 450}
+	local RDmgMod = 1.50
+	local DmgRaw = RDmg[Rlvl] + (myHero.damage * RDmgMod)
+	local Dmg = myHero:CalcDamage(unit, DmgRaw)
+	return Dmg
+end
+
+
+function CastQ()
+	if Target == nil then 
+		return 
+	end
+	CastPosition, HitChance, HeroPosition = UPL:Predict(_Q, myHero, targetSelector.target)
+	if CastPosition and HitChance > 0 then
+		CastSpell(_Q, CastPosition.x, CastPosition.z)
+	end
+end
+
+function FlagQ(CastPositionx, CastPositionz)
+	CastSpell(_Q, CastPositionx, CastPositionz)
+end
+
+function CastW()
+	CastSpell(_W)
+end
+
+function CastE()
+	if Target == nil then 
+		return 
+	end
+	CastPosition, HitChance, HeroPosition = UPL:Predict(_E, myHero, targetSelector.target)
+	if CastPosition and HitChance > 0 then
+		CalcAndCast(myHero, CastPosition, GetDistance(CastPosition)+50, 770)
+		if myHero:CanUseSpell(_Q) == READY and GetDistance(CastPosition) < 770 then
+			DelayAction(function() FlagQ(CastPosition.x, CastPosition.z) end, 0.3)
+		end
+	end
+end
+
+function CalcAndCast(FromPos, TooPos, PlaceRange, CheckRange)
+	FirstPos = Vector(FromPos.x, FromPos.z)
+	SecondPos = Vector(TooPos.x, TooPos.z)
+	NextBarrelrange = Vector(FirstPos + (SecondPos-FirstPos):normalized() * PlaceRange)
+	NextBarrelSpot = Vector(NextBarrelrange.x, myHero.y, NextBarrelrange.y)
+	if GetDistance(NextBarrelSpot) < CheckRange and myHero:CanUseSpell(_E) == READY then
+		CastSpell(_E, NextBarrelSpot.x, NextBarrelSpot.z)
+		return "casted"
+	else
+		return nil
+	end
+end
+
+function RSteal() 
+	for i,enemy in pairs(GetEnemyHeroes()) do
+    		if not enemy.dead and enemy.visible then
+			if myHero:CanUseSpell(_R) == READY then
+				if ValidTarget(enemy, 650) then
+					if enemy.health < GetRDamage(enemy) then
+						CastR(enemy)
+					end
+				end
+			end
+		end
+	end
+end
+
+function CastR(unit)
+	if unit == nil then 
+		return 
+	end
+	CastPosition, HitChance, HeroPosition = UPL:Predict(_R, myHero, unit)
+	if CastPosition and HitChance > 0 then
+		CastSpell(_R, CastPosition.x, CastPosition.z)
+	end
+end
+
+function OnUpdateBuff(Src, Buff, iStacks)
+	if Src == myHero then
+	end
+end
+
+function OnCreateObj(object)
+
+end
+
+function OnProcessSpell(unit, spell)
+	if unit == myHero then
+	end
+end
+
+function OnDeleteObj(object)
+
+end
