@@ -109,8 +109,10 @@ function GetTitanic()
 end
 
 function Harass()
-	if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 then
-		CastQ()
+	if Target then
+		if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 then
+			CastQ()
+		end
 	end
 end
 
@@ -172,7 +174,9 @@ function CastQ()
 end
 
 function FlagQ(CastPositionx, CastPositionz)
-	CastSpell(_Q, CastPositionx, CastPositionz)
+	if CastPositionx and CastPositionz then
+		CastSpell(_Q, CastPositionx, CastPositionz)
+	end
 end
 
 function CastW()
