@@ -19,7 +19,7 @@ function OnLoad()
 
     UPL:AddToMenu(Config)
     UPL:AddSpell(_Q, { speed = 1400, delay = 0.25, range = 770, width = 70, collision = false, aoe = false, type = "linear" })
-    UPL:AddSpell(_E, { speed = math.huge, delay = 0.75, range = 830, width = 75, collision = false, aoe = true, type = "linear" })
+    UPL:AddSpell(_E, { speed = math.huge, delay = 0.85, range = 830, width = 75, collision = false, aoe = true, type = "linear" })
     UPL:AddSpell(_R, { speed = math.huge, delay = 0.25, range = 650, width = 325, collision = false, aoe = true, type = "linear" })
 end
 
@@ -89,10 +89,8 @@ end
 
 
 function Flee()
-	if myHero:CanUseSpell(_E) == READY and GetDistance(mousePos) < 770 then
+	if myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY and GetDistance(mousePos) < 770 then
 		CastSpell(_E, mousePos.x, mousePos.z)
-	end
-	if myHero:CanUseSpell(_Q) == READY and GetDistance(mousePos) < 770 then
 		DelayAction(function() FlagQ(mousePos.x, mousePos.z) end, 0.3)
 	end
 	myHero:MoveTo(mousePos.x, mousePos.z)
@@ -236,7 +234,7 @@ function CastE()
 	end
 	CastPosition, HitChance, HeroPosition = UPL:Predict(_E, myHero, targetSelector.target)
 	if CastPosition and HitChance > 0 then
-		CalcAndCast(myHero, CastPosition, GetDistance(CastPosition)+50, 770)
+		CalcAndCast(myHero, CastPosition, GetDistance(CastPosition)+70, 770)
 		CastX = CastPosition.x
 		CastY = CastPosition.z
 		if myHero:CanUseSpell(_Q) == READY and GetDistance(CastPosition) < 770 then
@@ -258,13 +256,35 @@ function CalcAndCast(FromPos, TooPos, PlaceRange, CheckRange)
 	end
 end
 
+
+function CalcAndCastKS(FromPos, TooPos, PlaceRange, CheckRange)
+	FirstPos = Vector(FromPos.x, FromPos.z)
+	SecondPos = Vector(TooPos.x, TooPos.z)
+	NextBarrelrange = Vector(FirstPos + (SecondPos-FirstPos):normalized() * PlaceRange)
+	NextBarrelSpot = Vector(NextBarrelrange.x, myHero.y, NextBarrelrange.y)
+	if GetDistance(NextBarrelSpot) < CheckRange and myHero:CanUseSpell(_E) == READY then
+		CastSpell(_E, NextBarrelSpot.x, NextBarrelSpot.z)
+		CastX = NextBarrelSpot.x
+		CastZ = NextBarrelSpot.z
+		DelayAction(function() FlagQ(CastX, CastZ) end, 0.3)
+		return "casted"
+	else
+		return nil
+	end
+end
+
+
 function RSteal() 
 	for i,enemy in pairs(GetEnemyHeroes()) do
     		if not enemy.dead and enemy.visible then
 			if myHero:CanUseSpell(_R) == READY then
 				if ValidTarget(enemy, 650) then
 					if enemy.health < GetRDamage(enemy) then
-						CastSpell(_R, enemy)
+						--CastSpell(_R, enemy)
+					end
+				elseif ValidTarget(enemy, 1350) then
+					if enemy.health < GetRDamage(enemy) and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY then
+						CalcAndCastKS(myHero, enemy, 760, 770)
 					end
 				end
 			end
