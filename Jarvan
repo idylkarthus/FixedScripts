@@ -7,6 +7,10 @@ TITANICSLOT = nil
 TIAMAT = false
 CanE = false
 smite = nil
+ultActive = false
+Middlespot = nil
+middlex = nil
+middlez = nil
 TIAMATSLOT = nil
 local VP = VPrediction()
 function OnLoad()
@@ -89,9 +93,8 @@ end
 
 
 function Flee()
-	if myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY and GetDistance(mousePos) < 770 then
-		CastSpell(_E, mousePos.x, mousePos.z)
-		DelayAction(function() FlagQ(mousePos.x, mousePos.z) end, 0.3)
+	if myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY then
+		CalcAndCastKS(myHero, mousePos, 760, 770)
 	end
 	myHero:MoveTo(mousePos.x, mousePos.z)
 end
@@ -207,6 +210,26 @@ function GetRDamage(unit)
 	return Dmg
 end
 
+function GetEDamage(unit)
+	local Elvl = myHero:GetSpellData(_E).level
+	if Elvl < 1 then return 0 end
+	local EDmg = {60, 105, 150, 195, 240}
+	local EDmgMod = 0.80
+	local DmgRaw = EDmg[Elvl] + (myHero.damage * EDmgMod)
+	local Dmg = myHero:CalcMagicDamage(unit, DmgRaw)
+	return Dmg
+end
+
+function GetQDamage(unit)
+	local Qlvl = myHero:GetSpellData(_Q).level
+	if Qlvl < 1 then return 0 end
+	local QDmg = {70, 115, 160, 205, 250}
+	local QDmgMod = 1.20
+	local DmgRaw = QDmg[Qlvl] + (myHero.damage * QDmgMod)
+	local Dmg = myHero:CalcDamage(unit, DmgRaw)
+	return Dmg
+end
+
 
 function CastQ()
 	if Target == nil then 
@@ -234,11 +257,10 @@ function CastE()
 	end
 	CastPosition, HitChance, HeroPosition = UPL:Predict(_E, myHero, targetSelector.target)
 	if CastPosition and HitChance > 0 then
-		CalcAndCast(myHero, CastPosition, GetDistance(CastPosition)+70, 770)
-		CastX = CastPosition.x
-		CastY = CastPosition.z
-		if myHero:CanUseSpell(_Q) == READY and GetDistance(CastPosition) < 770 then
-			DelayAction(function() FlagQ(CastX, CastY) end, 0.3)
+		if myHero:CanUseSpell(_Q) == READY and myHero:CanUseSpell(_E) == READY then
+			CalcAndCastKS(myHero, CastPosition, GetDistance(CastPosition)+70, 770)
+		elseif myHero:CanUseSpell(_E) == READY then
+			CastSpell(_E, CastPosition.x, CastPosition.z)
 		end
 	end
 end
@@ -266,7 +288,7 @@ function CalcAndCastKS(FromPos, TooPos, PlaceRange, CheckRange)
 		CastSpell(_E, NextBarrelSpot.x, NextBarrelSpot.z)
 		CastX = NextBarrelSpot.x
 		CastZ = NextBarrelSpot.z
-		DelayAction(function() FlagQ(CastX, CastZ) end, 0.3)
+		DelayAction(function() FlagQ(CastX, CastZ) end, 0.01)
 		return "casted"
 	else
 		return nil
@@ -275,47 +297,77 @@ end
 
 
 function RSteal() 
-	for i,enemy in pairs(GetEnemyHeroes()) do
-    		if not enemy.dead and enemy.visible then
-			if myHero:CanUseSpell(_R) == READY then
-				if ValidTarget(enemy, 650) then
-					if enemy.health < GetRDamage(enemy) then
-						CastSpell(_R, enemy)
+	if ultActive == false then
+		for i,enemy in pairs(GetEnemyHeroes()) do
+    			if not enemy.dead and enemy.visible then
+				if myHero:CanUseSpell(_Q) == READY then
+					if ValidTarget(enemy, 770) then
+						if enemy.health < GetQDamage(enemy) then
+							CastPositionQ, HitChance, HeroPosition = UPL:Predict(_Q, myHero, enemy)
+							if CastPositionQ and HitChance > 0 then 
+								CastSpell(_Q, CastPositionQ.x, CastPositionQ.z)
+							end
+						end
 					end
-				elseif ValidTarget(enemy, 1350) then
-					if enemy.health < GetRDamage(enemy) and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY then
-						CalcAndCastKS(myHero, enemy, 760, 770)
+				end
+				if myHero:CanUseSpell(_E) == READY then
+					if ValidTarget(enemy, 830) then
+						if enemy.health < GetEDamage(enemy) then
+							CastPositionE, HitChance, HeroPosition = UPL:Predict(_E, myHero, enemy)
+							if CastPositionE and HitChance > 0 then
+								CastSpell(_E, CastPositionE.x, CastPositionE.z)
+							end
+						end
+					end
+				end
+				if myHero:CanUseSpell(_R) == READY then
+					if ValidTarget(enemy, 650) then
+						if enemy.health < GetRDamage(enemy) then
+							CastSpell(_R, enemy)
+						end
+					elseif ValidTarget(enemy, 1350) then
+						if enemy.health < GetRDamage(enemy) and myHero:CanUseSpell(_E) == READY and myHero:CanUseSpell(_Q) == READY then
+							CalcAndCastKS(myHero, enemy, 760, 770)
+						end
 					end
 				end
 			end
 		end
+	elseif CountEnemyHeroInRange(650) == 0 then
+		CastSpell(_R)
 	end
 end
 
-function CastR(unit)
-	if unit == nil then 
-		return 
-	end
-	CastPosition, HitChance, HeroPosition = UPL:Predict(_R, myHero, unit)
-	if CastPosition and HitChance > 0 then
-		CastSpell(_R, CastPosition.x, CastPosition.z)
-	end
-end
 
 function OnUpdateBuff(Src, Buff, iStacks)
 	if Src == myHero then
 	end
 end
 
-function OnCreateObj(object)
+function OnCreateObj(obj)
+	if GetDistance(obj) < 1000 then
+	end
+	if obj.name == "JarvanIVWall" then
+		ultActive = true
+		Middlespot = obj
+		middlex = myHero.x
+		middlez = myHero.z
+	end
+	if obj.name == "jarvancataclysm_sound.troy" then
+	end
+	if obj.name == "JarvanWallCrumble.troy" then
+		ultActive = false
+		Middlespot = nil
+		middlex = nil
+		middlez = nil
+	end
+end
+
+function OnDeleteteObj(obj)
 
 end
 
 function OnProcessSpell(unit, spell)
 	if unit == myHero then
 	end
-end
-
-function OnDeleteObj(object)
-
 end
