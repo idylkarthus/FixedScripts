@@ -11,6 +11,7 @@ local VP = VPrediction()
 function OnLoad()
     Config = scriptConfig("Jarvan Dude", "JJ")
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    Config:addParam("harass", "Harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
     Config:addParam("flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
     targetSelector = TargetSelector(TARGET_LESS_CAST, 900, DAMAGE_PHYSICAL, true)
 
@@ -31,6 +32,9 @@ function OnTick()
 	end
 	if Config.flee then
 		Flee()
+	end
+	if Config.harass then
+		Harass()
 	end
 	if myHero:CanUseSpell(_R) == READY then
 		RSteal()
@@ -104,6 +108,12 @@ function GetTitanic()
   	end
 end
 
+function Harass()
+	if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 then
+		CastQ()
+	end
+end
+
 function Combo()
 	if Target then
 		if myHero:CanUseSpell(_E) == READY then
@@ -115,7 +125,7 @@ function Combo()
 		if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 and CanE == false then
 			CastQ()
 		end
-		if myHero:CanUseSpell(_W) == READY and GetDistance(Target) < 600 then
+		if myHero:CanUseSpell(_W) == READY and GetDistance(Target) < 600 and myHero:CanUseSpell(_Q) ~= READY and myHero:CanUseSpell(_E) ~= READY then
 			CastW()
 		end
 		if myHero:CanUseSpell(_Q) ~= READY then
@@ -176,8 +186,10 @@ function CastE()
 	CastPosition, HitChance, HeroPosition = UPL:Predict(_E, myHero, targetSelector.target)
 	if CastPosition and HitChance > 0 then
 		CalcAndCast(myHero, CastPosition, GetDistance(CastPosition)+50, 770)
+		CastX = CastPosition.x
+		CastY = CastPosition.z
 		if myHero:CanUseSpell(_Q) == READY and GetDistance(CastPosition) < 770 then
-			DelayAction(function() FlagQ(CastPosition.x, CastPosition.z) end, 0.3)
+			DelayAction(function() FlagQ(CastX, CastY) end, 0.3)
 		end
 	end
 end
