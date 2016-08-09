@@ -5,11 +5,13 @@ require "VPrediction"
 TITANIC = false
 TITANICSLOT = nil
 TIAMAT = false
+CanE = false
 TIAMATSLOT = nil
 local VP = VPrediction()
 function OnLoad()
     Config = scriptConfig("Jarvan Dude", "JJ")
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+    Config:addParam("flee", "Flee", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
     targetSelector = TargetSelector(TARGET_LESS_CAST, 900, DAMAGE_PHYSICAL, true)
 
 
@@ -27,9 +29,22 @@ function OnTick()
 	if Config.shoot then
 		Combo()
 	end
+	if Config.flee then
+		Flee()
+	end
 	if myHero:CanUseSpell(_R) == READY then
 		RSteal()
 	end
+end
+
+function Flee()
+	if myHero:CanUseSpell(_E) == READY and GetDistance(mousePos) < 770 then
+		CastSpell(_E, mousePos.x, mousePos.z)
+	end
+	if myHero:CanUseSpell(_Q) == READY and GetDistance(mousePos) < 770 then
+		DelayAction(function() FlagQ(mousePos.x, mousePos.z) end, 0.3)
+	end
+	myHero:MoveTo(mousePos.x, mousePos.z)
 end
 
 function OnDraw()
@@ -91,7 +106,13 @@ end
 
 function Combo()
 	if Target then
-		if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 and myHero:CanUseSpell(_E) ~= READY  then
+		if myHero:CanUseSpell(_E) == READY then
+			CanE = true
+		end
+		if myHero:CanUseSpell(_E) ~= READY then
+			DelayAction(function() CantE() end, 0.5)
+		end
+		if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 and CanE == false then
 			CastQ()
 		end
 		if myHero:CanUseSpell(_W) == READY and GetDistance(Target) < 600 then
@@ -106,15 +127,18 @@ function Combo()
 				CastE()
 			end
 		end
-		if GetDistance(Target) < 440 then
+		if GetDistance(Target) < 440 and myHero:CanUseSpell(_Q) ~= READY and myHero:CanUseSpell(_E) ~= READY then
 			CastTiamat()
 		end
-		if GetDistance(Target) < 440 then
+		if GetDistance(Target) < 440 and myHero:CanUseSpell(_Q) ~= READY and myHero:CanUseSpell(_E) ~= READY then
 			CastTITANIC()
 		end	
 	end
 end
 
+function CantE()
+	CanE = false
+end
 
 function GetRDamage(unit)
 	local Rlvl = myHero:GetSpellData(_R).level
