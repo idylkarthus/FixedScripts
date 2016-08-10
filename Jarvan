@@ -199,11 +199,7 @@ function Combo()
 		if myHero:CanUseSpell(_W) == READY and GetDistance(Target) < 600 and myHero:CanUseSpell(_Q) ~= READY and myHero:CanUseSpell(_E) ~= READY then
 			CastW()
 		end
-		if myHero:CanUseSpell(_Q) ~= READY then
-			if myHero:CanUseSpell(_E) == READY and GetDistance(Target) < 830 then
-				CastE()
-			end
-		else
+		if myHero:CanUseSpell(_Q) == READY then
 			if myHero:CanUseSpell(_E) == READY and GetDistance(Target) < 770 then
 				CastE()
 			end
@@ -280,8 +276,6 @@ function CastE()
 	if CastPosition and HitChance > 0 then
 		if myHero:CanUseSpell(_Q) == READY and myHero:CanUseSpell(_E) == READY then
 			CalcAndCastKS(myHero, CastPosition, GetDistance(CastPosition)+70, 770)
-		elseif myHero:CanUseSpell(_E) == READY then
-			CastSpell(_E, CastPosition.x, CastPosition.z)
 		end
 	end
 end
