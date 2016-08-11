@@ -5,11 +5,11 @@ require "VPrediction"
 local VP = VPrediction()
 
 function OnLoad()
-    Config = scriptConfig("Jarvan Dude", "JJ")
+    Config = scriptConfig("Lux", "JJ")
     Config:addParam("shoot", "Shoot", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 
 
-    targetSelector = TargetSelector(TARGET_LESS_CAST, 900, DAMAGE_PHYSICAL, true)
+    targetSelector = TargetSelector(TARGET_LESS_CAST, 900, DAMAGE_MAGICAL, true)
 
 
     UPL:AddToMenu(Config)
@@ -36,17 +36,17 @@ end
 
 function Combo()
 	if Target then
-		if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 770 then
+		if myHero:CanUseSpell(_Q) == READY and GetDistance(Target) < 1200 then
 			CastQ()
 		end
-		if myHero:CanUseSpell(_W) == READY and GetDistance(Target) < 600 then
+		if myHero:CanUseSpell(_W) == READY and GetDistance(Target) < 1200 then
 			CastW()
 		end
-		if myHero:CanUseSpell(_E) == READY and GetDistance(Target) < 770 then
-			CastQ()
+		if myHero:CanUseSpell(_E) == READY and GetDistance(Target) < 1100 then
+			CastE()
 		end
-		if myHero:CanUseSpell(_R) == READY and GetDistance(Target) < 600 then
-			CastW()
+		if myHero:CanUseSpell(_R) == READY and GetDistance(Target) < 3340 then
+			CastR()
 		end		
 	end
 end
@@ -62,7 +62,6 @@ function CastQ()
 		end
 	end
 end
-
 
 
 function CastW()
